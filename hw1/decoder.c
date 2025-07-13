@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
     wordsToArp(&arp, ex1w);
     arp_toString(&arp, output_buff, sizeof(output_buff) );
-    printf("ARP PACKET BY BYTES\n %s \n", output_buff);
+    printf("ARP PACKET BY WORDS\n %s \n", output_buff);
 }
 
 static void bytesToArp(arp_ether_ipv4 *arp, u_int8_t *buff){
@@ -85,7 +85,7 @@ static void bytesToArp(arp_ether_ipv4 *arp, u_int8_t *buff){
     arp->ptype = ((uint16_t)buff[2] << 8) | buff[3]; //0x0800
 
     arp->hlen = buff[4]; //0x06 or 0x0006
-    arp->hlen = buff[5]; //0x04 or 0x0004
+    arp->plen = buff[5]; //0x04 or 0x0004
     arp->op = ((uint16_t)buff[6] << 8) | buff[7]; //0x0001
     
     // sha = 01:02:03:04:05:06
@@ -132,20 +132,6 @@ static void wordsToArp(arp_ether_ipv4 *arp, uint16_t *buff){
  * to with dstStr, and the length of the buffer is also passed in
  */
 void  arp_toString(arp_ether_ipv4 *ap, char *dstStr, int len) {
-    //printf("ptype: %04x", ap->ptype);
-    char output[len];
-    char header[] = "ARP PACKET DETAIL\n";
-    char htype[] = "\thtype:\t0x%04x\n";
-    char ptype[] = "\tptype:\t0x%04x\n";
-    char hlen[] = "\thlen:\t0x%u\n";
-    char plen[] = "\tplen:\t0x%u\n";
-    char op[] = "\top:\t0x%u\n";
-    char spa[] = "\tspa:\t%s\n";
-    char sha[] = "\tsha:\t%s\n";
-    char tpa[] = "\ttpa:\t%s\n";
-    char tha[] = "\ttha:\t%s\n";
-
-
     /*
     NOTE IN MY IMPLEMENTATION THE STRING I BUILT LOOKS LIKE THE BELOW
     YOU DONT EXACTLY NEED TO FORMAT YOUR OUTPUT THIS WAY BUT YOU SHOULD 
@@ -162,6 +148,55 @@ void  arp_toString(arp_ether_ipv4 *ap, char *dstStr, int len) {
      tpa:       192.168.1.1 
      tha:       aa:bb:cc:dd:ee:ff 
     */
+
+    memset(dstStr, 0, len);
+
+    strcat(dstStr, "ARP PACKET DETAIL\n");
+
+    char htype[16];
+    snprintf(htype, sizeof(htype), "\thtype:\t0x%04x\n", ap->htype);
+    strcat(dstStr, htype);
+    
+    char ptype[16];
+    snprintf(ptype, sizeof(ptype), "\tptype:\t0x%04x\n", ap->ptype);
+    strcat(dstStr, ptype);
+
+    char hlen[11];
+    snprintf(hlen, sizeof(hlen), "\thlen:\t%u\n", ap->hlen);
+    strcat(dstStr, hlen);
+
+    char plen[11];
+    snprintf(plen, sizeof(plen), "\tplen:\t%u\n", ap->plen);
+    strcat(dstStr, plen);
+
+    char op[9];
+    snprintf(op, sizeof(op), "\top:\t%u\n", ap->op);
+    strcat(dstStr, op);
+
+    char spa[20];
+    char spa_addr[16];
+    ip_toStr(ap->spa, spa_addr, sizeof(spa_addr));
+    snprintf(spa, sizeof(spa), "\tspa:\t%s\n", spa_addr);
+    strcat(dstStr, spa);
+
+    char sha[25];
+    char sha_addr[18];
+    mac_toStr(ap->sha, sha_addr, sizeof(sha_addr));
+    snprintf(sha, sizeof(sha), "\tsha:\t%s\n", sha_addr);
+    strcat(dstStr, sha);
+
+    char tpa[20];
+    char tpa_addr[16];
+    ip_toStr(ap->tpa, tpa_addr, sizeof(tpa_addr));
+    snprintf(tpa, sizeof(tpa), "\ttpa:\t%s\n", tpa_addr);
+    strcat(dstStr, tpa);
+
+    char tha[25];
+    char tha_addr[18];
+    mac_toStr(ap->tha, tha_addr, sizeof(tha_addr));
+    snprintf(tha, sizeof(tha), "\ttha:\t%s\n", tha_addr);
+    strcat(dstStr, tha);
+
 }
 
 /* ------------------------------------------------------------------------------------*/
