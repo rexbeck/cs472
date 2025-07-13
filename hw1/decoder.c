@@ -78,6 +78,43 @@ static void bytesToArp(arp_ether_ipv4 *arp, u_int8_t *buff){
     //This function accepts a pointer to a CHARACTER/BYTE buffer, in this case a byte buffer
     //It builds a arp_ether_ipv4 packet.  Notice a pointer to the structure
     //to copy the data into is passed as a pointer (e.g., *arp)
+    int len = 28;
+
+    // https://stackoverflow.com/questions/15249791/combining-two-uint8-t-as-uint16-t <-- Technique citation
+    arp->htype = ((uint16_t)buff[0] << 8) | buff[1]; //0x0001
+    arp->ptype = ((uint16_t)buff[2] << 8) | buff[3]; //0x0800
+
+    arp->hlen = buff[4]; //0x06 or 0x0006
+    arp->hlen = buff[5]; //0x04 or 0x0004
+    arp->op = ((uint16_t)buff[6] << 8) | buff[7]; //0x0001
+    
+    // sha = 01:02:03:04:05:06
+    arp->sha[0] = buff[8]; // 0x01
+    arp->sha[1] = buff[9]; // 0x02
+    arp->sha[2] = buff[10]; // 0x03
+    arp->sha[3] = buff[11]; // 0x04
+    arp->sha[4] = buff[12]; // 0x05
+    arp->sha[5] = buff[13]; // 0x06
+
+    // spa = 192.168.1.51
+    arp->spa[0] = buff[14];
+    arp->spa[1] = buff[15];
+    arp->spa[2] = buff[16];
+    arp->spa[3] = buff[17];
+
+    // tha = aa:bb:cc:dd:ee:ff
+    arp->tha[0] = buff[18];
+    arp->tha[1] = buff[19];
+    arp->tha[2] = buff[20];
+    arp->tha[3] = buff[21];
+    arp->tha[4] = buff[22];
+    arp->tha[5] = buff[23];
+
+    // tpa = 192.168.1.1
+    arp->tpa[0] = buff[24];
+    arp->tpa[1] = buff[25];
+    arp->tpa[2] = buff[26];
+    arp->tpa[3] = buff[27];
 }
 
 static void wordsToArp(arp_ether_ipv4 *arp, uint16_t *buff){
@@ -95,6 +132,19 @@ static void wordsToArp(arp_ether_ipv4 *arp, uint16_t *buff){
  * to with dstStr, and the length of the buffer is also passed in
  */
 void  arp_toString(arp_ether_ipv4 *ap, char *dstStr, int len) {
+    //printf("ptype: %04x", ap->ptype);
+    char output[len];
+    char header[] = "ARP PACKET DETAIL\n";
+    char htype[] = "\thtype:\t0x%04x\n";
+    char ptype[] = "\tptype:\t0x%04x\n";
+    char hlen[] = "\thlen:\t0x%u\n";
+    char plen[] = "\tplen:\t0x%u\n";
+    char op[] = "\top:\t0x%u\n";
+    char spa[] = "\tspa:\t%s\n";
+    char sha[] = "\tsha:\t%s\n";
+    char tpa[] = "\ttpa:\t%s\n";
+    char tha[] = "\ttha:\t%s\n";
+
 
     /*
     NOTE IN MY IMPLEMENTATION THE STRING I BUILT LOOKS LIKE THE BELOW
