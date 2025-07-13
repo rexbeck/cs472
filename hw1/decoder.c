@@ -72,13 +72,28 @@ int main(int argc, char *argv[]) {
     wordsToArp(&arp, ex1w);
     arp_toString(&arp, output_buff, sizeof(output_buff) );
     printf("ARP PACKET BY WORDS\n %s \n", output_buff);
+
+    bytesToArp(&arp, ex2b);
+    arp_toString(&arp, output_buff, sizeof(output_buff) );
+    printf("ARP PACKET BY BYTES\n %s \n", output_buff);
+
+    wordsToArp(&arp, ex2w);
+    arp_toString(&arp, output_buff, sizeof(output_buff) );
+    printf("ARP PACKET BY WORDS\n %s \n", output_buff);
+
+    bytesToArp(&arp, ex3b);
+    arp_toString(&arp, output_buff, sizeof(output_buff) );
+    printf("ARP PACKET BY BYTES\n %s \n", output_buff);
+
+    wordsToArp(&arp, ex3w);
+    arp_toString(&arp, output_buff, sizeof(output_buff) );
+    printf("ARP PACKET BY WORDS\n %s \n", output_buff);
 }
 
 static void bytesToArp(arp_ether_ipv4 *arp, u_int8_t *buff){
     //This function accepts a pointer to a CHARACTER/BYTE buffer, in this case a byte buffer
     //It builds a arp_ether_ipv4 packet.  Notice a pointer to the structure
     //to copy the data into is passed as a pointer (e.g., *arp)
-    int len = 28;
 
     // https://stackoverflow.com/questions/15249791/combining-two-uint8-t-as-uint16-t <-- Technique citation
     arp->htype = ((uint16_t)buff[0] << 8) | buff[1]; //0x0001
@@ -121,6 +136,38 @@ static void wordsToArp(arp_ether_ipv4 *arp, uint16_t *buff){
     //This function accepts a pointer to a WORD buffer, in this case a byte buffer
     //It builds a arp_ether_ipv4 packet.  Notice a pointer to the structure
     //to copy the data into is passed as a pointer (e.g., *arp)
+
+    arp->htype = buff[0];
+    arp->ptype = buff[1];
+
+    // https://stackoverflow.com/questions/1289251/converting-a-uint16-value-into-a-uint8-array2 <-- Citation
+    arp->hlen = (uint8_t)(buff[2] >> 8);
+    arp->plen = (uint8_t)buff[2];
+    arp->op = buff[3];
+
+    arp->sha[0] = (uint8_t)(buff[4] >> 8);
+    arp->sha[1] = (uint8_t)buff[4];
+    arp->sha[2] = (uint8_t)(buff[5] >> 8);
+    arp->sha[3] = (uint8_t)buff[5];
+    arp->sha[4] = (uint8_t)(buff[6] >> 8);
+    arp->sha[5] = (uint8_t)buff[6];
+
+    arp->spa[0] = (uint8_t)(buff[7] >> 8);
+    arp->spa[1] = (uint8_t)buff[7];
+    arp->spa[2] = (uint8_t)(buff[8] >> 8);
+    arp->spa[3] = (uint8_t)buff[8];
+
+    arp->tha[0] = (uint8_t)(buff[9] >> 8);
+    arp->tha[1] = (uint8_t)buff[9];
+    arp->tha[2] = (uint8_t)(buff[10] >> 8);
+    arp->tha[3] = (uint8_t)buff[10];
+    arp->tha[4] = (uint8_t)(buff[11] >> 8);
+    arp->tha[5] = (uint8_t)buff[11];
+
+    arp->tpa[0] = (uint8_t)(buff[12] >> 8);
+    arp->tpa[1] = (uint8_t)buff[12];
+    arp->tpa[2] = (uint8_t)(buff[13] >> 8);
+    arp->tpa[3] = (uint8_t)buff[13];
 }
 
 
@@ -161,19 +208,19 @@ void  arp_toString(arp_ether_ipv4 *ap, char *dstStr, int len) {
     snprintf(ptype, sizeof(ptype), "\tptype:\t0x%04x\n", ap->ptype);
     strcat(dstStr, ptype);
 
-    char hlen[11];
+    char hlen[12];
     snprintf(hlen, sizeof(hlen), "\thlen:\t%u\n", ap->hlen);
     strcat(dstStr, hlen);
 
-    char plen[11];
+    char plen[12];
     snprintf(plen, sizeof(plen), "\tplen:\t%u\n", ap->plen);
     strcat(dstStr, plen);
 
-    char op[9];
+    char op[10];
     snprintf(op, sizeof(op), "\top:\t%u\n", ap->op);
     strcat(dstStr, op);
 
-    char spa[20];
+    char spa[23];
     char spa_addr[16];
     ip_toStr(ap->spa, spa_addr, sizeof(spa_addr));
     snprintf(spa, sizeof(spa), "\tspa:\t%s\n", spa_addr);
@@ -185,7 +232,7 @@ void  arp_toString(arp_ether_ipv4 *ap, char *dstStr, int len) {
     snprintf(sha, sizeof(sha), "\tsha:\t%s\n", sha_addr);
     strcat(dstStr, sha);
 
-    char tpa[20];
+    char tpa[23];
     char tpa_addr[16];
     ip_toStr(ap->tpa, tpa_addr, sizeof(tpa_addr));
     snprintf(tpa, sizeof(tpa), "\ttpa:\t%s\n", tpa_addr);
