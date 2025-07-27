@@ -72,8 +72,12 @@ static void init_header(cs472_proto_header_t *header, int req_cmd, char *reqData
 
     header->proto = PROTO_CS_FUN;
     header->cmd = req_cmd;
-
     //TODO: Setup other header fields, eg., header->ver, header->dir, header->atm, header->ay
+    header->ver = 0x1;
+    header->dir = DIR_RECV;
+    header->atm = TERM_FALL;
+    header->ay = 2022;
+
 
     //switch based on the command
     switch(req_cmd){
@@ -132,7 +136,7 @@ static void start_client(cs472_proto_header_t *header, uint8_t *packet){
     addr.sin_port = htons(PORT_NUM);
 
     /*
-     * TODO:  The next things you need to do is to handle the cleint
+     * TODO:  The next things you need to do is to handle the client
      * socket to send things to the server, basically make the following
      * calls:
      * 
@@ -141,10 +145,32 @@ static void start_client(cs472_proto_header_t *header, uint8_t *packet){
      *      recv() - get the response back from the server
      */
 
+    ret = connect(data_socket, (const struct sockaddr *) &addr,
+                sizeof(struct sockaddr_in));
+
+    if (header->cmd == CMD_CLASS_INFO)
+    {
+        ret = send(data_socket, packet, sizeof(header), 0);
+    }
+    else
+    {
+        size_t packetlen = sizeof(header) + sizeof(packet) + 1;
+        ret = send(data_socket, packet, packetlen, 0);
+    }
+
     //Now process what the server sent, here is some helper code
     cs472_proto_header_t *pcktPointer =  (cs472_proto_header_t *)recv_buffer;
     uint8_t *msgPointer = NULL;
     uint8_t msgLen = 0;
+
+    while ((ret = recv(data_socket, recv_buffer, sizeof(recv_buffer), 0)) > 0)
+    {
+        int is_eof = ((char)recv_buffer[ret - 1] == "\0") ? 1 : 0;
+
+        if (is_eof){
+            break;
+        }
+    }
 
     process_recv_packet(pcktPointer, recv_buffer, &msgPointer, &msgLen);
     
